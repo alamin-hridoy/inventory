@@ -1,0 +1,12 @@
+bin/
+obj/
+
+*.user
+*.suo
+*.lscache
+
+app.db
+app.db-*
+
+appsettings.Development.json
+PROJECT_STUDY_GUIDE.md

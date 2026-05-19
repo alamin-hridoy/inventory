@@ -1,0 +1,29 @@
+@model ProfileViewModel
+@inject InventoryPilot.Services.UiText T
+@{
+    ViewData["Title"] = Model.DisplayName;
+}
+
+<div class="content-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h1 class="h3 mb-1">@Model.DisplayName</h1>
+            <div class="text-secondary">Public profile</div>
+        </div>
+    </div>
+
+    <h2 class="h5">@T.Get(Context, "Owned inventories")</h2>
+    <table class="table table-hover align-middle mb-0">
+        <thead><tr><th>@T.Get(Context, "Inventory")</th><th>@T.Get(Context, "Category")</th><th>@T.Get(Context, "Items")</th></tr></thead>
+        <tbody>
+        @foreach (var inventory in Model.OwnedInventories)
+        {
+            <tr class="clickable-row" data-href="@Url.Action("Details", "Inventories", new { id = inventory.Id })">
+                <td>@inventory.Title</td>
+                <td>@inventory.Category</td>
+                <td>@inventory.ItemCount</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

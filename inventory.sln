@@ -1,0 +1,30 @@
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InventoryPilot", "InventoryPilot.csproj", "{82884A2F-DF14-C606-A64C-84493CCCA943}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InventoryPilot.Tests", "InventoryPilot.Tests\InventoryPilot.Tests.csproj", "{34CE0F82-46B8-4992-8117-1C0639C80880}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{82884A2F-DF14-C606-A64C-84493CCCA943}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{82884A2F-DF14-C606-A64C-84493CCCA943}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{82884A2F-DF14-C606-A64C-84493CCCA943}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{82884A2F-DF14-C606-A64C-84493CCCA943}.Release|Any CPU.Build.0 = Release|Any CPU
+		{34CE0F82-46B8-4992-8117-1C0639C80880}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{34CE0F82-46B8-4992-8117-1C0639C80880}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{34CE0F82-46B8-4992-8117-1C0639C80880}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{34CE0F82-46B8-4992-8117-1C0639C80880}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {1EB872C6-0C25-43D8-B1B1-F1A320F3FC72}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,56 @@
+@model SearchResultViewModel
+@inject InventoryPilot.Services.UiText T
+@{
+    ViewData["Title"] = "Search";
+}
+
+<div class="content-card">
+    <h1 class="h3">@T.Get(Context, "Search results for") "@Model.Query"</h1>
+    <div class="row g-4 mt-1">
+        <div class="col-lg-7">
+            <h2 class="h5">@T.Get(Context, "Inventories")</h2>
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>@T.Get(Context, "Inventory")</th>
+                        <th>@T.Get(Context, "Owner")</th>
+                        <th>@T.Get(Context, "Items")</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var inventory in Model.Inventories)
+                {
+                    <tr class="clickable-row" data-href="@Url.Action("Details", "Inventories", new { id = inventory.Id })">
+                        <td>@inventory.Title</td>
+                        <td>@inventory.OwnerName</td>
+                        <td>@inventory.ItemCount</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+        <div class="col-lg-5">
+            <h2 class="h5">@T.Get(Context, "Items")</h2>
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>@T.Get(Context, "Item")</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var item in Model.Items)
+                {
+                    <tr class="clickable-row" data-href="@Url.Action("Details", "Items", new { id = item.ItemId })">
+                        <td>@item.CustomId</td>
+                        <td>
+                            <div class="fw-semibold">@item.DisplayName</div>
+                            <div class="small text-secondary">@item.InventoryTitle</div>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

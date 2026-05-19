@@ -1,0 +1,80 @@
+@{
+    var theme = Context.Request.Cookies["theme"] ?? "light";
+    var language = Context.Request.Cookies["language"] ?? "en";
+}
+@inject InventoryPilot.Services.UiText T
+<!DOCTYPE html>
+<html lang="@language" data-theme="@theme">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - InventoryPilot</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/InventoryPilot.styles.css" asp-append-version="true" />
+</head>
+<body>
+    <header class="app-header">
+        <nav class="navbar navbar-expand-lg">
+            <div class="container-xxl">
+                <a class="navbar-brand fw-bold" asp-controller="Home" asp-action="Index">InventoryPilot</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse gap-3" id="mainNav">
+                    <ul class="navbar-nav me-auto align-items-lg-center gap-lg-2">
+                        <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Index">@T.Get(Context, "Home")</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Inventories" asp-action="Create">@T.Get(Context, "New inventory")</a></li>
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <li class="nav-item"><a class="nav-link" asp-controller="Profile" asp-action="Index">@T.Get(Context, "My page")</a></li>
+                        }
+                    </ul>
+                    <form class="search-shell" asp-controller="Home" asp-action="Search" method="get">
+                        <input class="form-control" name="q" type="search" placeholder="@T.Get(Context, "Search inventories, items, tags")" />
+                    </form>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <form asp-controller="Preferences" asp-action="SetLanguage" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
+                            <select class="form-select form-select-sm header-select" name="language" onchange="this.form.submit()">
+                                <option value="en" selected="@(language == "en")">EN</option>
+                                <option value="es" selected="@(language == "es")">ES</option>
+                            </select>
+                        </form>
+                        <form asp-controller="Preferences" asp-action="SetTheme" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
+                            <select class="form-select form-select-sm header-select" name="theme" onchange="this.form.submit()">
+                                <option value="light" selected="@(theme == "light")">@T.Get(Context, "Light")</option>
+                                <option value="dark" selected="@(theme == "dark")">@T.Get(Context, "Dark")</option>
+                            </select>
+                        </form>
+                        <partial name="_LoginPartial" />
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container-xxl py-4">
+        @if (TempData["StatusMessage"] is string statusMessage)
+        {
+            <div class="alert alert-warning" role="alert">@statusMessage</div>
+        }
+        @RenderBody()
+    </main>
+
+    <footer class="footer-shell">
+        <div class="container-xxl d-flex flex-column flex-md-row justify-content-between gap-2">
+            <span>@T.Get(Context, "InventoryPilot keeps the table view front and center.")</span>
+            <a asp-controller="Home" asp-action="Privacy">Privacy</a>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

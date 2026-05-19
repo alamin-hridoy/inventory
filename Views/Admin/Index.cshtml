@@ -1,0 +1,67 @@
+@model IReadOnlyList<UserAdminRowViewModel>
+@inject InventoryPilot.Services.UiText T
+@{
+    ViewData["Title"] = T.Get(Context, "Admin");
+}
+
+<div class="content-card">
+    <h1 class="h3 mb-3">@T.Get(Context, "User management")</h1>
+    <form asp-action="BulkBlock" method="post" id="admin-block-form" class="d-inline">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="block" value="true" />
+    </form>
+    <form asp-action="BulkBlock" method="post" id="admin-unblock-form" class="d-inline">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="block" value="false" />
+    </form>
+    <form asp-action="BulkAdmin" method="post" id="admin-make-form" class="d-inline">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="makeAdmin" value="true" />
+    </form>
+    <form asp-action="BulkAdmin" method="post" id="admin-remove-form" class="d-inline">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="makeAdmin" value="false" />
+    </form>
+    <form asp-action="DeleteUsers" method="post" id="admin-delete-form" class="d-inline">
+        @Html.AntiForgeryToken()
+    </form>
+    <div class="toolbar mb-3">
+        <div class="d-flex gap-2 flex-wrap">
+            <button type="submit" form="admin-block-form" class="btn btn-outline-secondary">@T.Get(Context, "Block selected")</button>
+            <button type="submit" form="admin-unblock-form" class="btn btn-outline-secondary">@T.Get(Context, "Unblock selected")</button>
+            <button type="submit" form="admin-make-form" class="btn btn-outline-primary">@T.Get(Context, "Make admin")</button>
+            <button type="submit" form="admin-remove-form" class="btn btn-outline-primary">@T.Get(Context, "Remove admin")</button>
+            <button type="submit" form="admin-delete-form" class="btn btn-outline-danger">@T.Get(Context, "Delete users")</button>
+        </div>
+    </div>
+    <input class="form-control mb-3 table-filter" data-filter-table="#admin-users-table" placeholder="@T.Get(Context, "Filter")" />
+    <table class="table table-hover align-middle" id="admin-users-table">
+        <thead>
+            <tr>
+                <th><input type="checkbox" data-select-all /></th>
+                <th data-sort-key="name">@T.Get(Context, "Name")</th>
+                <th data-sort-key="email">Email</th>
+                <th data-sort-key="status">@T.Get(Context, "Status")</th>
+                <th data-sort-key="admin">@T.Get(Context, "Admin")</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var user in Model)
+        {
+            <tr data-name="@user.DisplayName.ToLowerInvariant()" data-email="@user.Email.ToLowerInvariant()" data-status="@(user.IsBlocked ? "blocked" : "active")" data-admin="@(user.IsAdmin ? "yes" : "no")">
+                <td>
+                    <input type="checkbox" name="userIds" value="@user.Id" form="admin-block-form" />
+                    <input type="checkbox" name="userIds" value="@user.Id" form="admin-unblock-form" hidden />
+                    <input type="checkbox" name="userIds" value="@user.Id" form="admin-make-form" hidden />
+                    <input type="checkbox" name="userIds" value="@user.Id" form="admin-remove-form" hidden />
+                    <input type="checkbox" name="userIds" value="@user.Id" form="admin-delete-form" hidden />
+                </td>
+                <td>@user.DisplayName</td>
+                <td>@user.Email</td>
+                <td>@(user.IsBlocked ? T.Get(Context, "Blocked") : T.Get(Context, "Active"))</td>
+                <td>@(user.IsAdmin ? T.Get(Context, "Yes") : T.Get(Context, "No"))</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

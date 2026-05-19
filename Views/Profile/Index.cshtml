@@ -1,0 +1,59 @@
+@model ProfileViewModel
+@inject InventoryPilot.Services.UiText T
+@{
+    ViewData["Title"] = T.Get(Context, "My page");
+}
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="content-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h1 class="h4 mb-0">@T.Get(Context, "Owned inventories")</h1>
+                    <div class="small text-secondary">@Model.DisplayName</div>
+                </div>
+                <div class="d-flex gap-2 flex-wrap">
+                    <form asp-controller="Inventories" asp-action="DeleteOwned" method="post" id="owned-delete-form">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-outline-danger">@T.Get(Context, "Delete selected")</button>
+                    </form>
+                    <a asp-controller="Inventories" asp-action="Create" class="btn btn-primary">@T.Get(Context, "Create new")</a>
+                </div>
+            </div>
+            <input class="form-control mb-3 table-filter" data-filter-table="#owned-inventories-table" placeholder="@T.Get(Context, "Filter")" />
+            <table class="table table-hover align-middle" id="owned-inventories-table">
+                <thead><tr><th><input type="checkbox" data-select-all /></th><th data-sort-key="name">@T.Get(Context, "Inventory")</th><th data-sort-key="category">@T.Get(Context, "Category")</th><th data-sort-key="items">@T.Get(Context, "Items")</th></tr></thead>
+                <tbody>
+                @foreach (var inventory in Model.OwnedInventories)
+                {
+                    <tr class="clickable-row" data-href="@Url.Action("Details", "Inventories", new { id = inventory.Id })" data-name="@inventory.Title.ToLowerInvariant()" data-category="@inventory.Category.ToLowerInvariant()" data-items="@inventory.ItemCount">
+                        <td><input type="checkbox" name="selectedInventories" value="@inventory.Id:@inventory.Version" form="owned-delete-form" /></td>
+                        <td>@inventory.Title</td>
+                        <td>@inventory.Category</td>
+                        <td>@inventory.ItemCount</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="content-card">
+            <h2 class="h4">@T.Get(Context, "Writable inventories")</h2>
+            <input class="form-control mb-3 table-filter" data-filter-table="#writable-inventories-table" placeholder="@T.Get(Context, "Filter")" />
+            <table class="table table-hover align-middle" id="writable-inventories-table">
+                <thead><tr><th data-sort-key="name">@T.Get(Context, "Inventory")</th><th data-sort-key="owner">@T.Get(Context, "Owner")</th><th data-sort-key="items">@T.Get(Context, "Items")</th></tr></thead>
+                <tbody>
+                @foreach (var inventory in Model.WritableInventories)
+                {
+                    <tr class="clickable-row" data-href="@Url.Action("Details", "Inventories", new { id = inventory.Id })" data-name="@inventory.Title.ToLowerInvariant()" data-owner="@inventory.OwnerName.ToLowerInvariant()" data-items="@inventory.ItemCount">
+                        <td>@inventory.Title</td>
+                        <td>@inventory.OwnerName</td>
+                        <td>@inventory.ItemCount</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

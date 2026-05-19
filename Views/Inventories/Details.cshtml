@@ -1,0 +1,417 @@
+@model InventoryPageViewModel
+@inject InventoryPilot.Services.UiText T
+@{
+    ViewData["Title"] = Model.Title;
+    var visibleFields = Model.Fields.Where(x => x.ShowInTable).OrderBy(x => x.SortOrder).ToList();
+}
+
+<section class="inventory-header mb-4">
+    <div>
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+            <h1 class="display-6 fw-bold mb-0">@Model.Title</h1>
+            <span class="save-badge" id="inventory-version-badge">@T.Get(Context, "Version") @Model.Version</span>
+        </div>
+        <div class="mt-3 mb-2 text-secondary markdown-body">@Html.Raw(Model.DescriptionHtml)</div>
+        <div class="d-flex gap-2 flex-wrap">
+            <span class="pill">@Model.Category</span>
+            @foreach (var tag in Model.Tags)
+            {
+                <a class="pill pill-link" asp-controller="Home" asp-action="Search" asp-route-tag="@tag">@tag</a>
+            }
+        </div>
+    </div>
+    @if (!string.IsNullOrWhiteSpace(Model.ImageUrl))
+    {
+        <img src="@Model.ImageUrl" alt="@Model.Title illustration" class="inventory-cover" />
+    }
+</section>
+
+<ul class="nav nav-tabs inventory-tabs mb-4">
+    <li class="nav-item"><a class="nav-link @(Model.ActiveTab == "items" ? "active" : null)" asp-route-tab="items">@T.Get(Context, "Items")</a></li>
+    <li class="nav-item"><a class="nav-link @(Model.ActiveTab == "discussion" ? "active" : null)" asp-route-tab="discussion">@T.Get(Context, "Chat")</a></li>
+    @if (Model.CanEditInventory)
+    {
+        <li class="nav-item"><a class="nav-link @(Model.ActiveTab == "settings" ? "active" : null)" asp-route-tab="settings">@T.Get(Context, "Settings")</a></li>
+        <li class="nav-item"><a class="nav-link @(Model.ActiveTab == "customid" ? "active" : null)" asp-route-tab="customid">@T.Get(Context, "Custom ID")</a></li>
+        <li class="nav-item"><a class="nav-link @(Model.ActiveTab == "fields" ? "active" : null)" asp-route-tab="fields">@T.Get(Context, "Fields")</a></li>
+        <li class="nav-item"><a class="nav-link @(Model.ActiveTab == "access" ? "active" : null)" asp-route-tab="access">@T.Get(Context, "Access")</a></li>
+    }
+    <li class="nav-item"><a class="nav-link @(Model.ActiveTab == "stats" ? "active" : null)" asp-route-tab="stats">@T.Get(Context, "Stats")</a></li>
+    <li class="nav-item"><a class="nav-link @(Model.ActiveTab == "export" ? "active" : null)" asp-route-tab="export">@T.Get(Context, "Export")</a></li>
+</ul>
+
+@if (Model.ActiveTab == "items")
+{
+    <div class="content-card">
+        <div class="toolbar mb-3">
+            @if (Model.CanEditItems)
+            {
+                <form asp-controller="Items" asp-action="DeleteSelected" method="post" id="bulk-delete-form" class="d-flex gap-2 align-items-center flex-wrap">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="inventoryId" value="@Model.Id" />
+                    <button type="submit" class="btn btn-outline-danger">@T.Get(Context, "Delete selected")</button>
+                    <a class="btn btn-primary" asp-controller="Items" asp-action="Create" asp-route-inventoryId="@Model.Id">@T.Get(Context, "Add item")</a>
+                </form>
+            }
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle inventory-table">
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" data-select-all /></th>
+                        <th>@T.Get(Context, "Custom ID")</th>
+                        <th>@T.Get(Context, "Item")</th>
+                        @foreach (var field in visibleFields)
+                        {
+                            <th>@field.Title</th>
+                        }
+                        <th>@T.Get(Context, "Created")</th>
+                        <th>@T.Get(Context, "Likes")</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var item in Model.Items)
+                {
+                    <tr class="clickable-row" data-href="@Url.Action("Details", "Items", new { id = item.Id })">
+                        <td>
+                            @if (Model.CanEditItems)
+                            {
+                                <input type="checkbox" name="selectedItems" value="@item.Id:@item.Version" form="bulk-delete-form" />
+                            }
+                        </td>
+                        <td>@item.CustomId</td>
+                        <td>@item.DisplayName</td>
+                        @foreach (var field in visibleFields)
+                        {
+                            <td>@item.VisibleFieldValues.GetValueOrDefault(field.Id)</td>
+                        }
+                        <td>@item.CreatedAt.ToLocalTime().ToString("g")</td>
+                        <td>@item.LikeCount</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+else if (Model.ActiveTab == "discussion")
+{
+    <div class="content-card">
+        <div class="discussion-feed" id="discussion-feed" data-stream-url="@Url.Action("DiscussionStream", new { id = Model.Id })">
+            @foreach (var post in Model.DiscussionPosts)
+            {
+                <article class="discussion-post">
+                    <div class="d-flex justify-content-between gap-3">
+                        <a class="fw-semibold text-decoration-none" asp-controller="Profile" asp-action="Public" asp-route-id="@post.AuthorId">@post.AuthorName</a>
+                        <time class="small text-secondary">@post.CreatedAt.ToLocalTime().ToString("g")</time>
+                    </div>
+                    <div class="mb-0 mt-2 markdown-body">@Html.Raw(post.Html)</div>
+                </article>
+            }
+        </div>
+        @if (Model.CanEditItems)
+        {
+            <form asp-action="PostDiscussion" method="post" class="mt-4">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.Id" />
+                <label class="form-label">@T.Get(Context, "New post")</label>
+                <textarea name="markdown" class="form-control" rows="4" placeholder="@T.Get(Context, "Markdown supported.")"></textarea>
+                <button type="submit" class="btn btn-primary mt-3">@T.Get(Context, "Post message")</button>
+            </form>
+        }
+    </div>
+}
+else if (Model.ActiveTab == "settings")
+{
+    <div class="content-card">
+        @if (Model.CanEditInventory)
+        {
+            <form asp-action="AutosaveSettings" method="post" class="vstack gap-3 autosave-form" data-autosave-status="#autosave-status" data-version-target="#inventory-version-badge">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="Id" value="@Model.Id" />
+                <input type="hidden" name="Version" value="@Model.Version" />
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <h2 class="h5 mb-0">@T.Get(Context, "General settings")</h2>
+                    <div class="small text-secondary" id="autosave-status">@T.Get(Context, "Autosave is idle")</div>
+                </div>
+                <div>
+                    <label class="form-label" for="settings-title">@T.Get(Context, "Title")</label>
+                    <input class="form-control" id="settings-title" name="Title" value="@Model.Title" maxlength="160" />
+                </div>
+                <div>
+                    <label class="form-label" for="settings-description">@T.Get(Context, "Description")</label>
+                    <textarea class="form-control" id="settings-description" name="Description" rows="5">@Model.Description</textarea>
+                    <div class="form-text">@T.Get(Context, "Markdown supported.")</div>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label" for="settings-category">@T.Get(Context, "Category")</label>
+                        <select class="form-select" id="settings-category" name="Category">
+                            @foreach (var category in Model.Categories)
+                            {
+                                if (Model.Category == category)
+                                {
+                                    <option selected>@category</option>
+                                }
+                                else
+                                {
+                                    <option>@category</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label" for="settings-image-url">@T.Get(Context, "Image URL")</label>
+                        <input class="form-control cloud-image-url" id="settings-image-url" name="ImageUrl" value="@Model.ImageUrl" placeholder="@T.Get(Context, "Cloud-hosted illustration URL")" />
+                        @if (!string.IsNullOrWhiteSpace(Model.CloudinaryCloudName) && !string.IsNullOrWhiteSpace(Model.CloudinaryUploadPreset))
+                        {
+                            <input class="form-control mt-2 cloud-image-upload" type="file" accept="image/*" data-cloud-name="@Model.CloudinaryCloudName" data-upload-preset="@Model.CloudinaryUploadPreset" />
+                            <div class="form-text cloud-image-status">@T.Get(Context, "Upload sends the image directly to Cloudinary and stores only the returned URL.")</div>
+                        }
+                    </div>
+                </div>
+                <div class="position-relative">
+                    <label class="form-label" for="settings-tags">@T.Get(Context, "Tags")</label>
+                    <input class="form-control" id="settings-tags" name="Tags" value="@string.Join(", ", Model.Tags)" placeholder="@T.Get(Context, "equipment, laptop, office")" data-tag-lookup-url="@Url.Action("TagLookup")" autocomplete="off" />
+                    <div id="tag-search-results" class="list-group mt-2"></div>
+                </div>
+                <div class="form-check">
+                    @if (Model.IsPublicWrite)
+                    {
+                        <input class="form-check-input" id="settings-public-write" type="checkbox" name="IsPublicWrite" value="true" checked />
+                    }
+                    else
+                    {
+                        <input class="form-check-input" id="settings-public-write" type="checkbox" name="IsPublicWrite" value="true" />
+                    }
+                    <label class="form-check-label" for="settings-public-write">@T.Get(Context, "Public write access for all authenticated users")</label>
+                </div>
+                <div class="d-flex gap-2 flex-wrap">
+                    <button type="submit" class="btn btn-primary">@T.Get(Context, "Save now")</button>
+                    <a class="btn btn-outline-secondary" asp-action="Create" asp-route-id="@Model.Id">@T.Get(Context, "Open dedicated editor")</a>
+                </div>
+            </form>
+        }
+        else
+        {
+            <dl class="row mb-0">
+                <dt class="col-sm-3">@T.Get(Context, "Owner")</dt>
+                <dd class="col-sm-9">@Model.OwnerName</dd>
+                <dt class="col-sm-3">@T.Get(Context, "Category")</dt>
+                <dd class="col-sm-9">@Model.Category</dd>
+                <dt class="col-sm-3">@T.Get(Context, "Public write")</dt>
+                <dd class="col-sm-9">@(Model.IsPublicWrite ? T.Get(Context, "Yes") : T.Get(Context, "No"))</dd>
+            </dl>
+        }
+    </div>
+}
+else if (Model.ActiveTab == "customid")
+{
+    <div class="content-card">
+        <div class="mb-4">
+            <div class="small text-secondary">@T.Get(Context, "Preview")</div>
+            <div class="h3" id="custom-id-preview">@ViewBag.CustomIdPreview</div>
+        </div>
+        <div class="alert alert-info">@T.Get(Context, "Use drag and drop to reorder ID parts. Format tips are available from the help markers.")</div>
+        <form asp-action="SaveCustomIdElements" method="post" id="custom-id-form">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@Model.Id" />
+            <div id="custom-id-list" class="vstack gap-3">
+                @for (var i = 0; i < Model.CustomIdElements.Count; i++)
+                {
+                    <div class="builder-row" draggable="true">
+                        <input type="hidden" name="elements[@i].SortOrder" value="@i" class="sort-order-input" />
+                        <input type="hidden" name="elements[@i].Id" value="@Model.CustomIdElements[i].Id" />
+                        <span class="builder-grip" title="@T.Get(Context, "Drag to reorder")">@T.Get(Context, "Drag")</span>
+                        <select name="elements[@i].ElementType" class="form-select">
+                            @foreach (var type in new[] { "Fixed", "Random20Bit", "Random32Bit", "Random6Digit", "Random9Digit", "Guid", "DateTime", "Sequence" })
+                            {
+                                if (Model.CustomIdElements[i].ElementType == type)
+                                {
+                                    <option value="@type" selected>@type</option>
+                                }
+                                else
+                                {
+                                    <option value="@type">@type</option>
+                                }
+                            }
+                        </select>
+                        <input name="elements[@i].FixedText" value="@Model.CustomIdElements[i].FixedText" class="form-control" placeholder="@T.Get(Context, "Fixed text")" />
+                        <input name="elements[@i].Format" value="@Model.CustomIdElements[i].Format" class="form-control" placeholder="@T.Get(Context, "Format, e.g. D4 or yyyy")" />
+                        <button type="button" class="btn btn-outline-secondary builder-help" data-bs-toggle="popover" data-bs-content="@T.Get(Context, "Examples: D4 for zero-padded sequence, yyyy for year, X5 for hex.")">?</button>
+                        @if (Model.CanEditInventory)
+                        {
+                            <button type="button" class="btn btn-outline-danger builder-remove">@T.Get(Context, "Remove")</button>
+                        }
+                    </div>
+                }
+            </div>
+            @if (Model.CanEditInventory)
+            {
+                <div class="builder-trash mt-3">@T.Get(Context, "Drop an element here to remove it.")</div>
+                <button type="button" class="btn btn-outline-primary mt-3" id="add-custom-id-row">@T.Get(Context, "Add element")</button>
+                <button type="submit" class="btn btn-primary mt-3">@T.Get(Context, "Save format")</button>
+            }
+        </form>
+    </div>
+}
+else if (Model.ActiveTab == "fields")
+{
+    <div class="content-card">
+        <div class="alert alert-info">@T.Get(Context, "Fixed fields like created_by, created_at, and custom_id are always included on the item form.")</div>
+        <form asp-action="SaveFieldDefinitions" method="post" id="fields-form">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@Model.Id" />
+            <div id="field-definition-list" class="vstack gap-3">
+                @for (var i = 0; i < Model.Fields.Count; i++)
+                {
+                    <div class="builder-row field-builder-row" draggable="true">
+                        <input type="hidden" name="fields[@i].SortOrder" value="@i" class="sort-order-input" />
+                        <input type="hidden" name="fields[@i].Id" value="@Model.Fields[i].Id" />
+                        <span class="builder-grip" title="@T.Get(Context, "Drag to reorder")">@T.Get(Context, "Drag")</span>
+                        <select name="fields[@i].FieldType" class="form-select">
+                            @foreach (var type in new[] { "SingleLineText", "MultiLineText", "Number", "Link", "Boolean", "Select" })
+                            {
+                                if (Model.Fields[i].FieldType == type)
+                                {
+                                    <option value="@type" selected>@type</option>
+                                }
+                                else
+                                {
+                                    <option value="@type">@type</option>
+                                }
+                            }
+                        </select>
+                        <input name="fields[@i].Title" value="@Model.Fields[i].Title" class="form-control" placeholder="@T.Get(Context, "Field title")" />
+                        <input name="fields[@i].Description" value="@Model.Fields[i].Description" class="form-control" placeholder="@T.Get(Context, "Description or tooltip text")" />
+                        <input name="fields[@i].OptionsJson" value="@Model.Fields[i].OptionsJson" class="form-control" placeholder='@T.Get(Context, "Select options: [\"Desktop\",\"Laptop\"]")' />
+                        <input name="fields[@i].RegexPattern" value="@Model.Fields[i].RegexPattern" class="form-control" placeholder="@T.Get(Context, "Regex pattern")" />
+                        <input name="fields[@i].MaxLength" value="@Model.Fields[i].MaxLength" class="form-control" type="number" min="1" placeholder="@T.Get(Context, "Max length")" />
+                        <input name="fields[@i].MinValue" value="@Model.Fields[i].MinValue" class="form-control" type="number" step="0.01" placeholder="@T.Get(Context, "Min value")" />
+                        <input name="fields[@i].MaxValue" value="@Model.Fields[i].MaxValue" class="form-control" type="number" step="0.01" placeholder="@T.Get(Context, "Max value")" />
+                        <div class="form-check">
+                            @if (Model.Fields[i].IsRequired)
+                            {
+                                <input type="checkbox" class="form-check-input" name="fields[@i].IsRequired" value="true" checked />
+                            }
+                            else
+                            {
+                                <input type="checkbox" class="form-check-input" name="fields[@i].IsRequired" value="true" />
+                            }
+                            <label class="form-check-label">@T.Get(Context, "Required")</label>
+                        </div>
+                        <div class="form-check">
+                            @if (Model.Fields[i].ShowInTable)
+                            {
+                                <input type="checkbox" class="form-check-input" name="fields[@i].ShowInTable" value="true" checked />
+                            }
+                            else
+                            {
+                                <input type="checkbox" class="form-check-input" name="fields[@i].ShowInTable" value="true" />
+                            }
+                            <label class="form-check-label">@T.Get(Context, "Show in table")</label>
+                        </div>
+                        @if (Model.CanEditInventory)
+                        {
+                            <button type="button" class="btn btn-outline-danger builder-remove">@T.Get(Context, "Remove")</button>
+                        }
+                    </div>
+                }
+            </div>
+            @if (Model.CanEditInventory)
+            {
+                <div class="builder-trash mt-3">@T.Get(Context, "Drop a field here to remove it.")</div>
+                <button type="button" class="btn btn-outline-primary mt-3" id="add-field-row">@T.Get(Context, "Add field")</button>
+                <button type="submit" class="btn btn-primary mt-3">@T.Get(Context, "Save fields")</button>
+            }
+        </form>
+    </div>
+}
+else if (Model.ActiveTab == "access")
+{
+    <div class="content-card">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="h5 mb-0">@T.Get(Context, "Write access")</h2>
+            <div class="d-flex gap-2 align-items-center flex-wrap">
+                <span class="small text-secondary">@T.Get(Context, "Autocomplete supports username and email.")</span>
+                <div class="btn-group btn-group-sm" role="group" aria-label="Sort access list">
+                    <button type="button" class="btn btn-outline-secondary access-sort-button active" data-sort-mode="name">@T.Get(Context, "Sort by name")</button>
+                    <button type="button" class="btn btn-outline-secondary access-sort-button" data-sort-mode="email">@T.Get(Context, "Sort by email")</button>
+                </div>
+            </div>
+        </div>
+        @if (Model.CanEditInventory)
+        {
+            <form asp-action="SaveAccess" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.Id" />
+                <label class="form-label">@T.Get(Context, "Users with write access")</label>
+                <input class="form-control mb-2" id="user-search-box" placeholder="@T.Get(Context, "Type a username or email")" data-lookup-url="@Url.Action("UserLookup")" />
+                <div id="user-search-results" class="list-group mb-3"></div>
+                <div id="selected-users" class="vstack gap-2 mb-3">
+                    @foreach (var accessUser in Model.AccessUsers)
+                    {
+                        <label class="selected-user" data-name="@accessUser.DisplayName.ToLowerInvariant()" data-email="@accessUser.Email.ToLowerInvariant()">
+                            <input type="hidden" name="userIds" value="@accessUser.UserId" />
+                            <span>@accessUser.DisplayName (@accessUser.Email)</span>
+                            <button type="button" class="btn btn-sm btn-outline-danger selected-user-remove">@T.Get(Context, "Remove")</button>
+                        </label>
+                    }
+                </div>
+                <button type="submit" class="btn btn-primary">@T.Get(Context, "Save access list")</button>
+            </form>
+        }
+        else
+        {
+            <table class="table">
+                <thead><tr><th>@T.Get(Context, "Name")</th><th>Email</th></tr></thead>
+                <tbody>
+                @foreach (var accessUser in Model.AccessUsers)
+                {
+                    <tr><td>@accessUser.DisplayName</td><td>@accessUser.Email</td></tr>
+                }
+                </tbody>
+            </table>
+        }
+    </div>
+}
+else if (Model.ActiveTab == "stats")
+{
+    <div class="content-card">
+        <div class="stats-grid">
+            <div class="stat-tile">
+                <span>@T.Get(Context, "Items")</span>
+                <strong>@Model.Statistics.ItemCount</strong>
+            </div>
+            @foreach (var numeric in Model.Statistics.NumericFields)
+            {
+                <div class="stat-tile">
+                    <span>@numeric.Title</span>
+                    <strong>@T.Get(Context, "Avg") @numeric.Average?.ToString("0.##")</strong>
+                    <small>@T.Get(Context, "Range") @numeric.Min?.ToString("0.##") - @numeric.Max?.ToString("0.##")</small>
+                </div>
+            }
+            @foreach (var text in Model.Statistics.StringFields)
+            {
+                <div class="stat-tile">
+                    <span>@text.Title</span>
+                    <strong>@(text.MostFrequentValue ?? T.Get(Context, "No values yet"))</strong>
+                </div>
+            }
+        </div>
+    </div>
+}
+else if (Model.ActiveTab == "export")
+{
+    <div class="content-card">
+        <h2 class="h5">@T.Get(Context, "Export inventory")</h2>
+        <p class="text-secondary">@T.Get(Context, "CSV export includes fixed fields and all custom fields in display order.")</p>
+        <a class="btn btn-primary" asp-action="ExportCsv" asp-route-id="@Model.Id">@T.Get(Context, "Download CSV")</a>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        initializeInventoryPage();
+    </script>
+}

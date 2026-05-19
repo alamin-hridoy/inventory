@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: inventorypilot-postgres
+    environment:
+      POSTGRES_USER: inventorypilot
+      POSTGRES_PASSWORD: inventorypilot
+      POSTGRES_DB: inventorypilot_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U inventorypilot -d inventorypilot_dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres-data:

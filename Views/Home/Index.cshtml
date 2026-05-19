@@ -1,0 +1,84 @@
+@model HomeIndexViewModel
+@inject InventoryPilot.Services.UiText T
+@{
+    ViewData["Title"] = T.Get(Context, "Home");
+}
+
+<section class="hero-panel mb-4">
+    <div>
+        <span class="eyebrow">@T.Get(Context, "Inventory management")</span>
+        <h1 class="display-5 fw-bold mt-2">@T.Get(Context, "Build flexible inventories with custom IDs and custom fields.")</h1>
+        <p class="lead mb-0">@T.Get(Context, "Owners define templates. Teams fill items in table-first views, discuss changes, and keep data searchable.")</p>
+    </div>
+</section>
+
+<div class="row g-4">
+    <div class="col-xl-7">
+        <div class="content-card h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="h4 mb-0">@T.Get(Context, "Latest inventories")</h2>
+                <a asp-controller="Inventories" asp-action="Create" class="btn btn-primary">@T.Get(Context, "Create inventory")</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>@T.Get(Context, "Name")</th>
+                            <th>@T.Get(Context, "Category")</th>
+                            <th>@T.Get(Context, "Owner")</th>
+                            <th>@T.Get(Context, "Items")</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var inventory in Model.LatestInventories)
+                    {
+                        <tr class="clickable-row" data-href="@Url.Action("Details", "Inventories", new { id = inventory.Id })">
+                            <td>
+                                <div class="fw-semibold">@inventory.Title</div>
+                                <div class="text-secondary small text-truncate-2">@inventory.Description</div>
+                            </td>
+                            <td>@inventory.Category</td>
+                            <td>@inventory.OwnerName</td>
+                            <td>@inventory.ItemCount</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-5">
+        <div class="content-card mb-4">
+            <h2 class="h4">@T.Get(Context, "Top 5 inventories")</h2>
+            <table class="table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>@T.Get(Context, "Inventory")</th>
+                        <th>@T.Get(Context, "Owner")</th>
+                        <th>@T.Get(Context, "Items")</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var inventory in Model.PopularInventories)
+                {
+                    <tr class="clickable-row" data-href="@Url.Action("Details", "Inventories", new { id = inventory.Id })">
+                        <td>@inventory.Title</td>
+                        <td>@inventory.OwnerName</td>
+                        <td>@inventory.ItemCount</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+        <div class="content-card">
+            <h2 class="h4">@T.Get(Context, "Tag cloud")</h2>
+            <div class="tag-cloud">
+                @foreach (var tag in Model.TagCloud)
+                {
+                    var size = 0.95m + Math.Min(tag.Count, 7) * 0.12m;
+                    <a asp-controller="Home" asp-action="Search" asp-route-tag="@tag.Name" style="font-size:@size.ToString(System.Globalization.CultureInfo.InvariantCulture)rem">@tag.Name</a>
+                }
+            </div>
+        </div>
+    </div>
+</div>

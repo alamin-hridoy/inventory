@@ -1,0 +1,14 @@
+bin/
+obj/
+.git/
+.agents/
+.codex/
+
+Dockerfile
+docker-compose.yml
+app.db
+app.db-*
+*.lscache
+
+appsettings.Development.json
+PROJECT_STUDY_GUIDE.md
