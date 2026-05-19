@@ -37,7 +37,8 @@ public class SmtpEmailSender : IEmailSender
 
         using var client = new SmtpClient(host, ReadInt("Email:Smtp:Port", 587))
         {
-            EnableSsl = ReadBool("Email:Smtp:EnableSsl", true)
+            EnableSsl = ReadBool("Email:Smtp:EnableSsl", true),
+            Timeout = ReadInt("Email:Smtp:TimeoutMilliseconds", 10000)
         };
 
         var username = _configuration["Email:Smtp:Username"];
@@ -47,7 +48,14 @@ public class SmtpEmailSender : IEmailSender
             client.Credentials = new NetworkCredential(username, password);
         }
 
-        await client.SendMailAsync(message);
+        try
+        {
+            await client.SendMailAsync(message);
+        }
+        catch (Exception ex) when (ex is SmtpException or InvalidOperationException or TimeoutException)
+        {
+            _logger.LogError(ex, "Could not send email to {Email}. Subject: {Subject}", email, subject);
+        }
     }
 
     private int ReadInt(string key, int fallback) =>
