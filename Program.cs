@@ -3,6 +3,7 @@ using InventoryPilot.Models;
 using InventoryPilot.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -38,6 +39,14 @@ builder.Services.AddAuthentication()
         options.Scope.Add("public_profile");
     });
 
+
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
 builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<InventoryPermissionService>();
 builder.Services.AddSingleton<CustomIdComposer>();
@@ -51,6 +60,8 @@ using (var scope = app.Services.CreateScope())
 {
     await AppSeeder.SeedAsync(scope.ServiceProvider);
 }
+
+app.UseForwardedHeaders();
 
 if (!app.Environment.IsDevelopment())
 {
