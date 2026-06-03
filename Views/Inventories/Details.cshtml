@@ -407,6 +407,16 @@ else if (Model.ActiveTab == "export")
         <h2 class="h5">@T.Get(Context, "Export inventory")</h2>
         <p class="text-secondary">@T.Get(Context, "CSV export includes fixed fields and all custom fields in display order.")</p>
         <a class="btn btn-primary" asp-action="ExportCsv" asp-route-id="@Model.Id">@T.Get(Context, "Download CSV")</a>
+        @if (Model.CanEditInventory)
+        {
+            <hr />
+            <h3 class="h6">Odoo API token</h3>
+            <p class="text-secondary">Use this read-only token from Odoo to import inventory fields and aggregate results.</p>
+            <label class="form-label">Endpoint</label>
+            <input class="form-control mb-2" value="@Model.ApiUrl" readonly />
+            <label class="form-label">Token</label>
+            <textarea class="form-control" rows="3" readonly>@Model.ApiToken</textarea>
+        }
     </div>
 }
 

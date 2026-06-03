@@ -1,6 +1,11 @@
 @{
     var theme = Context.Request.Cookies["theme"] ?? "light";
     var language = Context.Request.Cookies["language"] ?? "en";
+    var supportReturnUrl = $"{Context.Request.Path}{Context.Request.QueryString}";
+    var supportInventoryId = Context.Request.RouteValues["controller"]?.ToString() == "Inventories"
+        && Context.Request.RouteValues["action"]?.ToString() == "Details"
+        ? Context.Request.RouteValues["id"]?.ToString()
+        : null;
 }
 @inject InventoryPilot.Services.UiText T
 <!DOCTYPE html>
@@ -68,7 +73,10 @@
     <footer class="footer-shell">
         <div class="container-xxl d-flex flex-column flex-md-row justify-content-between gap-2">
             <span>@T.Get(Context, "InventoryPilot keeps the table view front and center.")</span>
-            <a asp-controller="Home" asp-action="Privacy">Privacy</a>
+            <div class="d-flex gap-3 flex-wrap">
+                <a asp-controller="Support" asp-action="Create" asp-route-returnUrl="@supportReturnUrl" asp-route-inventoryId="@supportInventoryId">Create support ticket</a>
+                <a asp-controller="Home" asp-action="Privacy">Privacy</a>
+            </div>
         </div>
     </footer>
 

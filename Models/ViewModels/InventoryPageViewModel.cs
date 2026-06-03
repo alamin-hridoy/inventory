@@ -24,4 +24,6 @@ public class InventoryPageViewModel
     public IReadOnlyList<InventoryDiscussionPostViewModel> DiscussionPosts { get; init; } = [];
     public IReadOnlyList<InventoryAccessGrantViewModel> AccessUsers { get; init; } = [];
     public InventoryStatisticsViewModel Statistics { get; init; } = new();
+    public string ApiToken { get; init; } = string.Empty;
+    public string ApiUrl { get; init; } = string.Empty;
 }

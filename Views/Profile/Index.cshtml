@@ -17,6 +17,7 @@
                         @Html.AntiForgeryToken()
                         <button type="submit" class="btn btn-outline-danger">@T.Get(Context, "Delete selected")</button>
                     </form>
+                    <a asp-controller="Integrations" asp-action="Salesforce" class="btn btn-outline-primary">Create Salesforce record</a>
                     <a asp-controller="Inventories" asp-action="Create" class="btn btn-primary">@T.Get(Context, "Create new")</a>
                 </div>
             </div>

@@ -1,0 +1,47 @@
+@model SupportTicketInputModel
+@{
+    ViewData["Title"] = "Create support ticket";
+}
+
+<div class="content-card">
+    <h1 class="h4 mb-3">Create support ticket</h1>
+    <p class="text-secondary">The ticket is stored as JSON and can be picked up by a Power Automate flow from Dropbox.</p>
+    <form asp-action="Create" method="post" class="vstack gap-3">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="ReturnUrl" />
+        <input type="hidden" asp-for="InventoryId" />
+        <input type="hidden" asp-for="InventoryTitle" />
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        @if (!string.IsNullOrWhiteSpace(Model.InventoryTitle))
+        {
+            <div class="alert alert-info mb-0">Inventory: <strong>@Model.InventoryTitle</strong></div>
+        }
+        <div>
+            <label asp-for="Summary" class="form-label">Summary</label>
+            <textarea asp-for="Summary" class="form-control" rows="4"></textarea>
+            <span asp-validation-for="Summary" class="text-danger"></span>
+        </div>
+        <div>
+            <label asp-for="Priority" class="form-label">Priority</label>
+            <select asp-for="Priority" class="form-select">
+                <option>High</option>
+                <option>Average</option>
+                <option>Low</option>
+            </select>
+            <span asp-validation-for="Priority" class="text-danger"></span>
+        </div>
+        <div>
+            <label asp-for="AdminEmails" class="form-label">Admin email addresses</label>
+            <textarea asp-for="AdminEmails" class="form-control" rows="3" placeholder="admin@example.com, owner@example.com"></textarea>
+            <span asp-validation-for="AdminEmails" class="text-danger"></span>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+            <button type="submit" class="btn btn-primary">Submit ticket</button>
+            <a href="@(Model.ReturnUrl ?? Url.Action("Index", "Home"))" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -20,19 +20,22 @@ public class InventoriesController : Controller
     private readonly CustomIdComposer _customIdComposer;
     private readonly MarkdownRenderer _markdownRenderer;
     private readonly IConfiguration _configuration;
+    private readonly InventoryApiTokenService _apiTokenService;
 
     public InventoriesController(
         ApplicationDbContext db,
         InventoryPermissionService permissions,
         CustomIdComposer customIdComposer,
         MarkdownRenderer markdownRenderer,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        InventoryApiTokenService apiTokenService)
     {
         _db = db;
         _permissions = permissions;
         _customIdComposer = customIdComposer;
         _markdownRenderer = markdownRenderer;
         _configuration = configuration;
+        _apiTokenService = apiTokenService;
     }
 
     [AllowAnonymous]
@@ -136,7 +139,9 @@ public class InventoriesController : Controller
                 DisplayName = x.User?.DisplayName ?? string.Empty,
                 Email = x.User?.Email ?? string.Empty
             }).OrderBy(x => x.DisplayName).ToList(),
-            Statistics = BuildStatistics(inventory)
+            Statistics = BuildStatistics(inventory),
+            ApiToken = _apiTokenService.GenerateToken(inventory.Id),
+            ApiUrl = Url.Action("Get", "InventoryAggregates", null, Request.Scheme) ?? string.Empty
         };
 
         ViewBag.CustomIdPreview = _customIdComposer.BuildPreview(

@@ -48,7 +48,12 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 });
 
 builder.Services.AddControllersWithViews();
+builder.Services.AddHttpClient();
 builder.Services.AddScoped<InventoryPermissionService>();
+builder.Services.AddScoped<SupportTicketUploadService>();
+builder.Services.AddScoped<SalesforceService>();
+builder.Services.AddScoped<InventoryAggregateService>();
+builder.Services.AddScoped<InventoryApiTokenService>();
 builder.Services.AddSingleton<CustomIdComposer>();
 builder.Services.AddSingleton<MarkdownRenderer>();
 builder.Services.AddSingleton<UiText>();

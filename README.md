@@ -172,6 +172,19 @@ Email__Smtp__Port=587
 Email__Smtp__EnableSsl=true
 Email__Smtp__Username=yourgmail@gmail.com
 Email__Smtp__Password=your-google-app-password
+Resend__ApiKey=...
+Resend__From=InventoryPilot <onboarding@resend.dev>
+Salesforce__LoginUrl=https://login.salesforce.com
+Salesforce__ClientId=...
+Salesforce__ClientSecret=...
+Salesforce__Username=...
+Salesforce__Password=...
+Salesforce__SecurityToken=...
+Integrations__TokenSecret=long-random-secret
+SupportTickets__Provider=Dropbox
+SupportTickets__AdminEmails=admin@example.com
+SupportTickets__DropboxFolder=/inventorypilot-support
+Dropbox__AccessToken=...
 ASPNETCORE_ENVIRONMENT=Production
 ```
 
@@ -198,9 +211,78 @@ External integrations require provider credentials:
 - Google OAuth credentials for Google login.
 - Facebook app credentials for Facebook login.
 - Cloudinary cloud name and unsigned preset for image upload.
-- SMTP credentials for real email delivery.
+- Resend or SMTP credentials for real email delivery.
+- Salesforce connected app credentials for creating Account and Contact records from the user profile page.
+- Dropbox access token for support ticket JSON uploads used by the Power Automate flow.
 
-Without SMTP, registration confirmation links are logged by the app, so the flow is still testable locally.
+Without email credentials, confirmation links are written to the application logs for local testing.
+
+## Third-Party Integrations
+
+### Salesforce
+
+Users can open their profile page and create a Salesforce Account with a linked Contact. Admins may do this for users they manage. Configure a direct access token, a connected app username/password flow, or a server-to-server client credentials flow.
+
+For External Client Apps with client credentials enabled:
+
+```text
+Salesforce__AuthFlow=ClientCredentials
+Salesforce__LoginUrl=https://login.salesforce.com
+Salesforce__ClientId=...
+Salesforce__ClientSecret=...
+Salesforce__ApiVersion=v59.0
+```
+
+The Salesforce app must have client credentials flow enabled, an assigned run-as user, API access, and an OAuth scope such as `api`.
+
+For username/password flow:
+
+```text
+Salesforce__AuthFlow=Password
+Salesforce__LoginUrl=https://login.salesforce.com
+Salesforce__ClientId=...
+Salesforce__ClientSecret=...
+Salesforce__Username=...
+Salesforce__Password=...
+Salesforce__SecurityToken=...
+Salesforce__ApiVersion=v59.0
+```
+
+For short demos, you can also provide:
+
+```text
+Salesforce__InstanceUrl=...
+Salesforce__AccessToken=...
+```
+
+### Odoo
+
+Inventory owners/admins can open an inventory's Export tab and copy the aggregate API URL and token. The endpoint is:
+
+```text
+GET /api/inventory-aggregates?token=...
+```
+
+Set a strong shared signing secret in production:
+
+```text
+Integrations__TokenSecret=long-random-secret
+```
+
+An Odoo addon is included in `integrations/odoo_inventory_viewer`. Install it in Odoo, create an InventoryPilot Import record, paste the API URL and token, then click Import inventory. Odoo stores the inventory title, field list, item count, and aggregate values.
+
+### Support Tickets / Power Automate
+
+Authenticated users can use the Create support ticket link in the footer from any page. The app generates a JSON payload containing the current user, current page link, inventory title when available, priority, summary, and admin emails. With Dropbox configured, the JSON is uploaded to Dropbox for a Power Automate flow to watch and notify admins.
+
+```text
+SupportTickets__Provider=Dropbox
+SupportTickets__AdminEmails=admin@example.com,owner@example.com
+SupportTickets__DropboxFolder=/inventorypilot-support
+Dropbox__AccessToken=...
+```
+
+Create the Power Automate flow separately with a Dropbox trigger for new files in that folder, then send email or mobile notifications using the JSON file content.
 
 ## Local Test Checklist
 

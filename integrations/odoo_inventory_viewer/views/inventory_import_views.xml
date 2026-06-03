@@ -1,0 +1,64 @@
+<odoo>
+    <record id="inventorypilot_import_tree" model="ir.ui.view">
+        <field name="name">inventorypilot.import.tree</field>
+        <field name="model">inventorypilot.import</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="inventory_title"/>
+                <field name="inventory_category"/>
+                <field name="item_count"/>
+                <field name="generated_at"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="inventorypilot_import_form" model="ir.ui.view">
+        <field name="name">inventorypilot.import.form</field>
+        <field name="model">inventorypilot.import</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_import" type="object" string="Import from InventoryPilot" class="btn-primary"/>
+                </header>
+                <sheet>
+                    <group>
+                        <field name="endpoint_url"/>
+                        <field name="api_token"/>
+                    </group>
+                    <group>
+                        <field name="inventory_title"/>
+                        <field name="inventory_category"/>
+                        <field name="item_count"/>
+                        <field name="generated_at"/>
+                    </group>
+                    <notebook>
+                        <page string="Fields">
+                            <field name="field_line_ids">
+                                <tree>
+                                    <field name="title"/>
+                                    <field name="field_type"/>
+                                    <field name="average"/>
+                                    <field name="minimum"/>
+                                    <field name="maximum"/>
+                                    <field name="top_values_json"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <page string="Raw JSON">
+                            <field name="raw_json" nolabel="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="inventorypilot_import_action" model="ir.actions.act_window">
+        <field name="name">InventoryPilot Imports</field>
+        <field name="res_model">inventorypilot.import</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem id="inventorypilot_menu_root" name="InventoryPilot" sequence="10"/>
+    <menuitem id="inventorypilot_menu_imports" name="Imported Inventories" parent="inventorypilot_menu_root" action="inventorypilot_import_action"/>
+</odoo>
